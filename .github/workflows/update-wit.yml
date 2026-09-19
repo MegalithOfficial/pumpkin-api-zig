@@ -1,0 +1,65 @@
+name: Update WIT
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-wit:
+    name: Update WIT
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - name: Set up Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+
+      - name: Set up wasm-tools
+        uses: bytecodealliance/actions/wasm-tools/setup@v1
+        with:
+          # The generated src/plugin.wit is printed by wasm-tools, keep this in
+          # sync with what `zig build gen` was last run with.
+          version: "1.259.0"
+
+      - name: Update submodule
+        id: update_submodule
+        run: |
+          set -eux
+
+          cd wit
+          git fetch origin master
+          git checkout FETCH_HEAD
+
+          echo "wit_commit=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Regenerate bindings
+        run: |
+          set -eux
+
+          zig build gen
+          zig build test
+          zig build check
+          zig build
+
+      - name: Commit
+        run: |
+          set -eux
+
+          witCommit='${{ steps.update_submodule.outputs.wit_commit }}'
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add wit src
+          if git diff --cached --quiet; then
+            echo "already up to date"
+            exit 0
+          fi
+          git commit -m "Sync to Pumpkin-MC/pumpkin-plugin-wit@${witCommit}"
+          git push

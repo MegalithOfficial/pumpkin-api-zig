@@ -1,0 +1,62 @@
+name: Main
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  workflow_run:
+    types:
+      - completed
+    workflows:
+      - "Update WIT"
+
+permissions:
+  contents: read
+
+jobs:
+  main:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - name: Set up Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+
+      - name: Set up wasm-tools
+        uses: bytecodealliance/actions/wasm-tools/setup@v1
+        with:
+          # The generated src/plugin.wit is printed by wasm-tools, keep this in
+          # sync with what `zig build gen` was last run with.
+          version: "1.259.0"
+
+      - name: Format
+        run: zig fmt --check build.zig src tools example
+
+      - name: Test
+        run: zig build test --summary all
+
+      - name: Generated bindings are up to date
+        run: |
+          set -eux
+          zig build gen
+          git diff --exit-code -- src
+
+      - name: Compile every binding
+        run: zig build check
+
+      - name: Build example
+        run: |
+          set -eux
+          zig build
+          wasm-tools validate zig-out/pumpkin-plugin-example.wasm
+
+      - name: Upload example
+        uses: actions/upload-artifact@v7
+        with:
+          name: pumpkin-plugin-example
+          path: zig-out/pumpkin-plugin-example.wasm
