@@ -1,0 +1,507 @@
+{
+  "worlds": [
+    {
+      "name": "plugin",
+      "imports": {
+        "interface-0": {
+          "interface": {
+            "id": 0
+          }
+        },
+        "interface-1": {
+          "interface": {
+            "id": 1
+          }
+        },
+        "canvas": {
+          "type": 17
+        },
+        "shape": {
+          "type": 18
+        },
+        "pair": {
+          "type": 19
+        }
+      },
+      "exports": {
+        "start": {
+          "function": {
+            "name": "start",
+            "kind": "freestanding",
+            "params": [
+              {
+                "name": "canvas",
+                "type": 21
+              }
+            ],
+            "result": 20
+          }
+        },
+        "measure": {
+          "function": {
+            "name": "measure",
+            "kind": "freestanding",
+            "params": [
+              {
+                "name": "shape",
+                "type": 18
+              },
+              {
+                "name": "scale",
+                "type": 19
+              }
+            ],
+            "result": "f32"
+          }
+        },
+        "stop": {
+          "function": {
+            "name": "stop",
+            "kind": "freestanding",
+            "params": []
+          }
+        },
+        "interface-2": {
+          "interface": {
+            "id": 2
+          }
+        }
+      },
+      "package": 0
+    }
+  ],
+  "interfaces": [
+    {
+      "name": "types",
+      "types": {
+        "point": 1,
+        "color": 2,
+        "access": 3,
+        "shape": 5,
+        "pair": 6,
+        "names": 7
+      },
+      "functions": {},
+      "package": 0
+    },
+    {
+      "name": "host",
+      "types": {
+        "point": 8,
+        "color": 9,
+        "shape": 10,
+        "access": 11,
+        "canvas": 12
+      },
+      "functions": {
+        "[constructor]canvas": {
+          "name": "[constructor]canvas",
+          "kind": {
+            "constructor": 12
+          },
+          "params": [
+            {
+              "name": "width",
+              "type": "u32"
+            },
+            {
+              "name": "height",
+              "type": "u32"
+            }
+          ],
+          "result": 13
+        },
+        "[static]canvas.open": {
+          "name": "[static]canvas.open",
+          "kind": {
+            "static": 12
+          },
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "result": 14,
+          "docs": {
+            "contents": "Opens a canvas stored on disk."
+          }
+        },
+        "[method]canvas.draw": {
+          "name": "[method]canvas.draw",
+          "kind": {
+            "method": 12
+          },
+          "params": [
+            {
+              "name": "self",
+              "type": 15
+            },
+            {
+              "name": "shape",
+              "type": 10
+            },
+            {
+              "name": "at",
+              "type": 8
+            },
+            {
+              "name": "color",
+              "type": 9
+            }
+          ]
+        },
+        "[method]canvas.blend": {
+          "name": "[method]canvas.blend",
+          "kind": {
+            "method": 12
+          },
+          "params": [
+            {
+              "name": "self",
+              "type": 15
+            },
+            {
+              "name": "other",
+              "type": 15
+            },
+            {
+              "name": "types",
+              "type": 11
+            }
+          ],
+          "docs": {
+            "contents": "Copies `other` on top of this canvas."
+          }
+        },
+        "[method]canvas.name": {
+          "name": "[method]canvas.name",
+          "kind": {
+            "method": 12
+          },
+          "params": [
+            {
+              "name": "self",
+              "type": 15
+            }
+          ],
+          "result": 0
+        },
+        "present": {
+          "name": "present",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "canvas",
+              "type": 13
+            }
+          ],
+          "result": "u64",
+          "docs": {
+            "contents": "Shows the canvas and closes it."
+          }
+        },
+        "log": {
+          "name": "log",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "message",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "package": 0
+    },
+    {
+      "name": "guest",
+      "types": {
+        "point": 16
+      },
+      "functions": {
+        "describe": {
+          "name": "describe",
+          "kind": "freestanding",
+          "params": [],
+          "result": 16
+        }
+      },
+      "package": 0
+    }
+  ],
+  "types": [
+    {
+      "name": null,
+      "kind": {
+        "option": "string"
+      },
+      "owner": null
+    },
+    {
+      "name": "point",
+      "kind": {
+        "record": {
+          "fields": [
+            {
+              "name": "x",
+              "type": "s32"
+            },
+            {
+              "name": "y",
+              "type": "s32"
+            },
+            {
+              "name": "label",
+              "type": 0,
+              "docs": {
+                "contents": "Optional label."
+              }
+            }
+          ]
+        }
+      },
+      "owner": {
+        "interface": 0
+      },
+      "docs": {
+        "contents": "Where something is."
+      }
+    },
+    {
+      "name": "color",
+      "kind": {
+        "enum": {
+          "cases": [
+            {
+              "name": "red"
+            },
+            {
+              "name": "green"
+            },
+            {
+              "name": "blue"
+            }
+          ]
+        }
+      },
+      "owner": {
+        "interface": 0
+      }
+    },
+    {
+      "name": "access",
+      "kind": {
+        "flags": {
+          "flags": [
+            {
+              "name": "read"
+            },
+            {
+              "name": "write"
+            },
+            {
+              "name": "exec"
+            }
+          ]
+        }
+      },
+      "owner": {
+        "interface": 0
+      }
+    },
+    {
+      "name": null,
+      "kind": {
+        "list": 1
+      },
+      "owner": null
+    },
+    {
+      "name": "shape",
+      "kind": {
+        "variant": {
+          "cases": [
+            {
+              "name": "nothing",
+              "type": null
+            },
+            {
+              "name": "circle",
+              "type": "f32"
+            },
+            {
+              "name": "polygon",
+              "type": 4
+            }
+          ]
+        }
+      },
+      "owner": {
+        "interface": 0
+      }
+    },
+    {
+      "name": "pair",
+      "kind": {
+        "tuple": {
+          "types": [
+            "u8",
+            "f64"
+          ]
+        }
+      },
+      "owner": {
+        "interface": 0
+      }
+    },
+    {
+      "name": "names",
+      "kind": {
+        "list": "string"
+      },
+      "owner": {
+        "interface": 0
+      }
+    },
+    {
+      "name": "point",
+      "kind": {
+        "type": 1
+      },
+      "owner": {
+        "interface": 1
+      }
+    },
+    {
+      "name": "color",
+      "kind": {
+        "type": 2
+      },
+      "owner": {
+        "interface": 1
+      }
+    },
+    {
+      "name": "shape",
+      "kind": {
+        "type": 5
+      },
+      "owner": {
+        "interface": 1
+      }
+    },
+    {
+      "name": "access",
+      "kind": {
+        "type": 3
+      },
+      "owner": {
+        "interface": 1
+      }
+    },
+    {
+      "name": "canvas",
+      "kind": "resource",
+      "owner": {
+        "interface": 1
+      }
+    },
+    {
+      "name": null,
+      "kind": {
+        "handle": {
+          "own": 12
+        }
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "result": {
+          "ok": 13,
+          "err": "string"
+        }
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "handle": {
+          "borrow": 12
+        }
+      },
+      "owner": null
+    },
+    {
+      "name": "point",
+      "kind": {
+        "type": 1
+      },
+      "owner": {
+        "interface": 2
+      }
+    },
+    {
+      "name": "canvas",
+      "kind": {
+        "type": 12
+      },
+      "owner": {
+        "world": 0
+      }
+    },
+    {
+      "name": "shape",
+      "kind": {
+        "type": 5
+      },
+      "owner": {
+        "world": 0
+      }
+    },
+    {
+      "name": "pair",
+      "kind": {
+        "type": 6
+      },
+      "owner": {
+        "world": 0
+      }
+    },
+    {
+      "name": null,
+      "kind": {
+        "result": {
+          "ok": null,
+          "err": "string"
+        }
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "handle": {
+          "own": 17
+        }
+      },
+      "owner": null
+    }
+  ],
+  "packages": [
+    {
+      "name": "demo:gen@1.2.0",
+      "interfaces": {
+        "types": 0,
+        "host": 1,
+        "guest": 2
+      },
+      "worlds": {
+        "plugin": 0
+      }
+    }
+  ]
+}
