@@ -70,6 +70,7 @@ interface biomes {
     cherry-grove,
     cold-ocean,
     crimson-forest,
+    dappled-forest,
     dark-forest,
     deep-cold-ocean,
     deep-dark,
@@ -491,12 +492,14 @@ interface data-components {
     blocks-attacks,
     piercing-weapon,
     kinetic-weapon,
-    swing-animation,
+    attack-animation,
+    interact-animation,
     additional-trade-cost,
+    block-transformer,
+    villager-food,
     stored-enchantments,
     dye,
     dyed-color,
-    map-color,
     map-id,
     map-decorations,
     map-post-processing,
@@ -533,6 +536,10 @@ interface data-components {
     lock,
     container-loot,
     break-sound,
+    compostable,
+    cooking-fuel,
+    brewing-fuel,
+    mob-visibility,
     villager-variant,
     wolf-variant,
     wolf-sound-variant,
@@ -562,6 +569,11 @@ interface data-components {
     cat-collar,
     sheep-color,
     shulker-color,
+    provides-pottery-pattern,
+    sign-text-front,
+    sign-text-back,
+    waxed,
+    cushion-color,
   }
 }
 
@@ -614,6 +626,8 @@ interface entity-statuses {
   enum entity-status {
     armadillo-peek,
     armorstand-wobble,
+    boat-launch,
+    boat-sink,
     body-break,
     cancel-shake-wetness,
     chest-break,
@@ -712,6 +726,7 @@ interface entity-types {
     cow,
     creaking,
     creeper,
+    cushion,
     dark-oak-boat,
     dark-oak-chest-boat,
     dolphin,
@@ -787,6 +802,8 @@ interface entity-types {
     pillager,
     player,
     polar-bear,
+    poplar-boat,
+    poplar-chest-boat,
     pufferfish,
     rabbit,
     ravager,
@@ -1087,6 +1104,9 @@ interface particles {
     infested,
     cherry-leaves,
     pale-oak-leaves,
+    red-poplar-leaves,
+    orange-poplar-leaves,
+    yellow-poplar-leaves,
     tinted-leaves,
     sculk-soul,
     sculk-charge,
@@ -1833,6 +1853,10 @@ interface sounds {
     item-crossbow-quick-charge-2,
     item-crossbow-quick-charge-3,
     item-crossbow-shoot,
+    entity-cushion-break,
+    entity-cushion-place,
+    entity-cushion-sit,
+    entity-cushion-get-up,
     block-deadbush-idle,
     block-decorated-pot-break,
     block-decorated-pot-fall,
@@ -3309,6 +3333,25 @@ interface sounds {
     entity-small-sulfur-cube-jump,
     entity-small-sulfur-cube-squish,
     entity-small-sulfur-cube-eat,
+    block-shelf-mushroom-break,
+    block-shelf-mushroom-fall,
+    block-shelf-mushroom-place,
+    block-shelf-mushroom-step,
+    block-shelf-mushroom-bounce,
+    block-poplar-leaves-break,
+    block-poplar-leaves-hit,
+    block-poplar-leaves-fall,
+    block-poplar-leaves-place,
+    block-poplar-leaves-step,
+    block-poplar-leaves-ambient,
+    block-straw-bed-break,
+    block-straw-bed-break-leave,
+    block-straw-bed-step,
+    block-straw-bed-place,
+    block-straw-bed-hit,
+    block-straw-bed-fall,
+    block-red-shrub-break,
+    block-red-shrub-place,
   }
 }
 
@@ -3387,6 +3430,7 @@ interface statistics {
     interact-with-crafting-table,
     open-chest,
     sleep-in-bed,
+    sleep-in-straw-bed,
     open-shulker-box,
     open-barrel,
     interact-with-blast-furnace,
@@ -4863,6 +4907,11 @@ interface bedrock-packets {
     slots: list<u8>,
   }
 
+  enum hand-slot {
+    mainhand,
+    offhand,
+  }
+
   record stack-request-item {
     identifier: option<string>,
     metadata-value: s32,
@@ -5350,7 +5399,7 @@ interface bedrock-packets {
     dedicated,
     tv-os,
     sony,
-    nx,
+    nintendo,
     xbox,
     windows-phone,
     linux,
@@ -5444,9 +5493,19 @@ interface bedrock-packets {
     tick: s64,
   }
 
-  record item-descriptor-count {
-    item-identifier: string,
+  record recipe-item-descriptor-item {
+    identifier: string,
     metadata-value: s32,
+  }
+
+  variant recipe-item-descriptor {
+    empty,
+    item(recipe-item-descriptor-item),
+    tag(string),
+  }
+
+  record item-descriptor-count {
+    descriptor: recipe-item-descriptor,
     count: s32,
   }
 
@@ -6101,7 +6160,7 @@ interface bedrock-packets {
     block-position: tuple<s32, s32, s32>,
     block-face: u8,
     hot-bar-slot: s32,
-    hand: u8,
+    hand: hand-slot,
     item-in-hand: network-item-descriptor,
     player-position: tuple<f64, f64, f64>,
     click-position: tuple<f64, f64, f64>,
@@ -6771,6 +6830,9 @@ interface java-packets {
 
   record s-confirm-teleport {
     teleport-id: s32,
+    position: tuple<f64, f64, f64>,
+    yaw: f32,
+    pitch: f32,
   }
 
   record s-container-button-click {
@@ -6902,6 +6964,7 @@ interface java-packets {
     release-item-in-use,
     swap-item,
     spear-jab,
+    change-destroy-direction,
   }
 
   enum action {
@@ -7205,6 +7268,10 @@ interface java-packets {
     data: list<u8>,
   }
 
+  record config-c-config-post-effects {
+    effects: list<string>,
+  }
+
   record config-c-registry-data {
     registry-id: string,
     entries: list<string>,
@@ -7350,6 +7417,19 @@ interface java-packets {
 
   record c-chunk-batch-end {
     batch-size: s32,
+  }
+
+  record chunk-heightmaps {
+    world-surface: option<list<s64>>,
+    motion-blocking: option<list<s64>>,
+    motion-blocking-no-leaves: option<list<s64>>,
+  }
+
+  record chunk-block-entity {
+    packed-xz: u8,
+    y: s32,
+    type-id: s32,
+    data: string,
   }
 
   record chunk-biome-entry {
@@ -7624,6 +7704,11 @@ interface java-packets {
     animation: u8,
   }
 
+  record c-swing-arm {
+    entity-id: s32,
+    off-hand: bool,
+  }
+
   enum animation {
     swing-main-arm,
     leave-bed,
@@ -7753,6 +7838,15 @@ interface java-packets {
     empty-block-light-mask: list<s64>,
     sky-light-arrays: list<list<u8>>,
     block-light-arrays: list<list<u8>>,
+  }
+
+  record c-chunk-data {
+    chunk-x: s32,
+    chunk-z: s32,
+    heightmaps: chunk-heightmaps,
+    data: list<u8>,
+    block-entities: list<chunk-block-entity>,
+    light-data: light-data,
   }
 
   record c-light-update {
@@ -7980,6 +8074,10 @@ interface java-packets {
     pitch: f32,
   }
 
+  record c-post-effects {
+    effects: list<string>,
+  }
+
   record c-projectile-power {
     entity-id: s32,
     x-power: f64,
@@ -8188,7 +8286,7 @@ interface java-packets {
     position: tuple<f64, f64, f64>,
     volume: f32,
     pitch: f32,
-    seed: f64,
+    seed: s64,
   }
 
   record c-spawn-entity {
@@ -8201,27 +8299,6 @@ interface java-packets {
     yaw: u8,
     head-yaw: u8,
     data: s32,
-  }
-
-  record c-spawn-living-entity {
-    entity-id: s32,
-    entity-uuid: uuid,
-    r-type: s32,
-    position: tuple<f64, f64, f64>,
-    yaw: u8,
-    pitch: u8,
-    head-yaw: u8,
-    velocity: string,
-    metadata: option<list<u8>>,
-  }
-
-  record c-spawn-painting {
-    entity-id: s32,
-    uuid: uuid,
-    title: string,
-    %variant: s32,
-    location: tuple<s32, s32, s32>,
-    direction: u8,
   }
 
   record c-stop-sound {
@@ -8417,11 +8494,6 @@ interface java-packets {
     tags: list<string>,
   }
 
-  record c-use-bed {
-    entity-id: s32,
-    location: tuple<s32, s32, s32>,
-  }
-
   enum waypoint-operation {
     track,
     untrack,
@@ -8549,7 +8621,6 @@ interface java-packets {
     s-set-structure-block(s-set-structure-block),
     s-set-test-block(s-set-test-block),
     s-spectate-entity(s-spectate-entity),
-    s-swing-arm(s-swing-arm),
     s-teleport-to-entity(s-teleport-to-entity),
     s-test-instance-block-action(s-test-instance-block-action),
     s-update-sign(s-update-sign),
@@ -8572,6 +8643,7 @@ interface java-packets {
     config-c-known-packs(config-c-known-packs),
     config-c-config-ping(config-c-config-ping),
     config-c-plugin-message(config-c-plugin-message),
+    config-c-config-post-effects(config-c-config-post-effects),
     config-c-registry-data(config-c-registry-data),
     config-c-config-remove-resource-pack(config-c-config-remove-resource-pack),
     config-c-config-reset-chat,
@@ -8660,6 +8732,7 @@ interface java-packets {
     c-remove-player-info(c-remove-player-info),
     c-player-rotation(c-player-rotation),
     c-player-spawn-position(c-player-spawn-position),
+    c-post-effects(c-post-effects),
     c-projectile-power(c-projectile-power),
     c-recipe-book-add(c-recipe-book-add),
     c-recipe-book-remove(c-recipe-book-remove),
@@ -8697,8 +8770,6 @@ interface java-packets {
     c-play-show-dialog(c-play-show-dialog),
     c-sound-effect(c-sound-effect),
     c-spawn-entity(c-spawn-entity),
-    c-spawn-living-entity(c-spawn-living-entity),
-    c-spawn-painting(c-spawn-painting),
     c-start-configuration,
     c-stop-sound(c-stop-sound),
     c-store-cookie(c-store-cookie),
@@ -8721,7 +8792,6 @@ interface java-packets {
     c-update-objectives(c-update-objectives),
     c-update-recipes(c-update-recipes),
     c-update-score(c-update-score),
-    c-use-bed(c-use-bed),
     c-waypoint(c-waypoint),
     c-world-event(c-world-event),
     status-c-ping-response(status-c-ping-response),
@@ -10283,6 +10353,7 @@ interface player {
     v-1-21-11,
     v-26-1,
     v-26-2,
+    v-26-3,
     unknown,
   }
 

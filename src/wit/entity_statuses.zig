@@ -3,6 +3,8 @@
 pub const EntityStatus = enum(u8) {
     armadillo_peek,
     armorstand_wobble,
+    boat_launch,
+    boat_sink,
     body_break,
     cancel_shake_wetness,
     chest_break,

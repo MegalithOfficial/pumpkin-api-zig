@@ -178,6 +178,11 @@ pub const LegacySetItemSlot = struct {
     slots: []const u8,
 };
 
+pub const HandSlot = enum(u8) {
+    mainhand,
+    offhand,
+};
+
 pub const StackRequestItem = struct {
     identifier: ?[]const u8,
     metadata_value: i32,
@@ -665,7 +670,7 @@ pub const BuildPlatform = enum(u8) {
     dedicated,
     tv_os,
     sony,
-    nx,
+    nintendo,
     xbox,
     windows_phone,
     linux,
@@ -759,9 +764,19 @@ pub const CCorrectPlayerMovePrediction = struct {
     tick: i64,
 };
 
-pub const ItemDescriptorCount = struct {
-    item_identifier: []const u8,
+pub const RecipeItemDescriptorItem = struct {
+    identifier: []const u8,
     metadata_value: i32,
+};
+
+pub const RecipeItemDescriptor = union(enum) {
+    empty,
+    item: RecipeItemDescriptorItem,
+    tag: []const u8,
+};
+
+pub const ItemDescriptorCount = struct {
+    descriptor: RecipeItemDescriptor,
     count: i32,
 };
 
@@ -1416,7 +1431,7 @@ pub const UseItemTransactionData = struct {
     block_position: struct { i32, i32, i32 },
     block_face: u8,
     hot_bar_slot: i32,
-    hand: u8,
+    hand: HandSlot,
     item_in_hand: NetworkItemDescriptor,
     player_position: struct { f64, f64, f64 },
     click_position: struct { f64, f64, f64 },

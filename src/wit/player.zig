@@ -505,6 +505,7 @@ pub const JavaMinecraftVersion = enum(u8) {
     v_1_21_11,
     v_26_1,
     v_26_2,
+    v_26_3,
     unknown,
 };
 

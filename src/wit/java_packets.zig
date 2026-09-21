@@ -186,6 +186,9 @@ pub const SCommandSuggestion = struct {
 
 pub const SConfirmTeleport = struct {
     teleport_id: i32,
+    position: struct { f64, f64, f64 },
+    yaw: f32,
+    pitch: f32,
 };
 
 pub const SContainerButtonClick = struct {
@@ -317,6 +320,7 @@ pub const Status = enum(u8) {
     release_item_in_use,
     swap_item,
     spear_jab,
+    change_destroy_direction,
 };
 
 pub const Action = enum(u8) {
@@ -620,6 +624,10 @@ pub const ConfigCPluginMessage = struct {
     data: []const u8,
 };
 
+pub const ConfigCConfigPostEffects = struct {
+    effects: []const []const u8,
+};
+
 pub const ConfigCRegistryData = struct {
     registry_id: []const u8,
     entries: []const []const u8,
@@ -765,6 +773,19 @@ pub const CChangeDifficulty = struct {
 
 pub const CChunkBatchEnd = struct {
     batch_size: i32,
+};
+
+pub const ChunkHeightmaps = struct {
+    world_surface: ?[]const i64,
+    motion_blocking: ?[]const i64,
+    motion_blocking_no_leaves: ?[]const i64,
+};
+
+pub const ChunkBlockEntity = struct {
+    packed_xz: u8,
+    y: i32,
+    type_id: i32,
+    data: []const u8,
 };
 
 pub const ChunkBiomeEntry = struct {
@@ -1039,6 +1060,11 @@ pub const CEntityAnimation = struct {
     animation: u8,
 };
 
+pub const CSwingArm = struct {
+    entity_id: i32,
+    off_hand: bool,
+};
+
 pub const Animation = enum(u8) {
     swing_main_arm,
     leave_bed,
@@ -1168,6 +1194,15 @@ pub const LightData = struct {
     empty_block_light_mask: []const i64,
     sky_light_arrays: []const []const u8,
     block_light_arrays: []const []const u8,
+};
+
+pub const CChunkData = struct {
+    chunk_x: i32,
+    chunk_z: i32,
+    heightmaps: ChunkHeightmaps,
+    data: []const u8,
+    block_entities: []const ChunkBlockEntity,
+    light_data: LightData,
 };
 
 pub const CLightUpdate = struct {
@@ -1395,6 +1430,10 @@ pub const CPlayerSpawnPosition = struct {
     pitch: f32,
 };
 
+pub const CPostEffects = struct {
+    effects: []const []const u8,
+};
+
 pub const CProjectilePower = struct {
     entity_id: i32,
     x_power: f64,
@@ -1603,7 +1642,7 @@ pub const CSoundEffect = struct {
     position: struct { f64, f64, f64 },
     volume: f32,
     pitch: f32,
-    seed: f64,
+    seed: i64,
 };
 
 pub const CSpawnEntity = struct {
@@ -1616,27 +1655,6 @@ pub const CSpawnEntity = struct {
     yaw: u8,
     head_yaw: u8,
     data: i32,
-};
-
-pub const CSpawnLivingEntity = struct {
-    entity_id: i32,
-    entity_uuid: Uuid,
-    r_type: i32,
-    position: struct { f64, f64, f64 },
-    yaw: u8,
-    pitch: u8,
-    head_yaw: u8,
-    velocity: []const u8,
-    metadata: ?[]const u8,
-};
-
-pub const CSpawnPainting = struct {
-    entity_id: i32,
-    uuid: Uuid,
-    title: []const u8,
-    variant: i32,
-    location: struct { i32, i32, i32 },
-    direction: u8,
 };
 
 pub const CStopSound = struct {
@@ -1832,11 +1850,6 @@ pub const CUpdateTagsPlay = struct {
     tags: []const []const u8,
 };
 
-pub const CUseBed = struct {
-    entity_id: i32,
-    location: struct { i32, i32, i32 },
-};
-
 pub const WaypointOperation = enum(u8) {
     track,
     untrack,
@@ -1964,7 +1977,6 @@ pub const ServerboundPacket = union(enum) {
     s_set_structure_block: SSetStructureBlock,
     s_set_test_block: SSetTestBlock,
     s_spectate_entity: SSpectateEntity,
-    s_swing_arm: SSwingArm,
     s_teleport_to_entity: STeleportToEntity,
     s_test_instance_block_action: STestInstanceBlockAction,
     s_update_sign: SUpdateSign,
@@ -1987,6 +1999,7 @@ pub const ClientboundPacket = union(enum) {
     config_c_known_packs: ConfigCKnownPacks,
     config_c_config_ping: ConfigCConfigPing,
     config_c_plugin_message: ConfigCPluginMessage,
+    config_c_config_post_effects: ConfigCConfigPostEffects,
     config_c_registry_data: ConfigCRegistryData,
     config_c_config_remove_resource_pack: ConfigCConfigRemoveResourcePack,
     config_c_config_reset_chat,
@@ -2075,6 +2088,7 @@ pub const ClientboundPacket = union(enum) {
     c_remove_player_info: CRemovePlayerInfo,
     c_player_rotation: CPlayerRotation,
     c_player_spawn_position: CPlayerSpawnPosition,
+    c_post_effects: CPostEffects,
     c_projectile_power: CProjectilePower,
     c_recipe_book_add: CRecipeBookAdd,
     c_recipe_book_remove: CRecipeBookRemove,
@@ -2112,8 +2126,6 @@ pub const ClientboundPacket = union(enum) {
     c_play_show_dialog: CPlayShowDialog,
     c_sound_effect: CSoundEffect,
     c_spawn_entity: CSpawnEntity,
-    c_spawn_living_entity: CSpawnLivingEntity,
-    c_spawn_painting: CSpawnPainting,
     c_start_configuration,
     c_stop_sound: CStopSound,
     c_store_cookie: CStoreCookie,
@@ -2136,7 +2148,6 @@ pub const ClientboundPacket = union(enum) {
     c_update_objectives: CUpdateObjectives,
     c_update_recipes: CUpdateRecipes,
     c_update_score: CUpdateScore,
-    c_use_bed: CUseBed,
     c_waypoint: CWaypoint,
     c_world_event: CWorldEvent,
     status_c_ping_response: StatusCPingResponse,
