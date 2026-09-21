@@ -97,7 +97,7 @@ pub fn stats() Stats {
 
 /// Drops the handles nobody kept. This calls into the host, which is not
 /// allowed from a post-return function, so it can't be left to `endCall`.
-fn releaseHandles() void {
+pub fn releaseHandles() void {
     while (tracked.pop()) |item| item.drop(@bitCast(item.handle));
 }
 
@@ -417,6 +417,37 @@ pub fn liftFlat(comptime T: type, slots: []const u64) T {
         },
         else => comptime unreachable,
     }
+}
+
+// A plugin only ever looks at a few cases of the big variants (there are
+// hundreds of events). These let it lift and lower one case without pulling
+// in code for all the others.
+
+pub fn loadTag(comptime U: type, ptr: [*]const u8) std.meta.Tag(U) {
+    return @enumFromInt(get(Discriminant(caseCount(U)), ptr));
+}
+
+pub fn loadCase(comptime U: type, comptime tag: std.meta.Tag(U), ptr: [*]const u8) @FieldType(U, @tagName(tag)) {
+    return load(@FieldType(U, @tagName(tag)), ptr + payloadOffset(U));
+}
+
+pub fn storeCase(comptime U: type, comptime tag: std.meta.Tag(U), value: @FieldType(U, @tagName(tag)), ptr: [*]u8) void {
+    put(Discriminant(caseCount(U)), ptr, @intFromEnum(tag));
+    store(@FieldType(U, @tagName(tag)), value, ptr + payloadOffset(U));
+}
+
+/// Offset of field `index` inside the record `T` in linear memory.
+pub fn offsetOf(comptime T: type, comptime index: usize) comptime_int {
+    return fieldOffset(T, index);
+}
+
+/// Whether parameters of this shape arrive as a pointer instead of flat values.
+pub fn passedInMemory(comptime Args: type) bool {
+    return flatten(Args).len > max_flat_params;
+}
+
+pub fn alloc(comptime T: type) [*]u8 {
+    return scratch(T);
 }
 
 fn put(comptime Int: type, ptr: [*]u8, value: Int) void {

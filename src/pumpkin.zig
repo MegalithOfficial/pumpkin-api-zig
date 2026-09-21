@@ -122,15 +122,25 @@ pub fn on(
     comptime handler: fn (Server, *EventData(event_type)) void,
     options: EventOptions,
 ) void {
+    const tag = comptime std.meta.stringToEnum(std.meta.Tag(Event), @tagName(event_type)).?;
     const glue = struct {
-        fn dispatch(srv: Server, ev: *Event) void {
-            handler(srv, &@field(ev, @tagName(event_type)));
+        // Only this event's payload gets lifted. Going through the whole
+        // `Event` union would compile code for every event there is.
+        fn dispatch(srv: Server, in: [*]const u8, out: [*]u8) void {
+            if (abi.loadTag(Event, in) != tag) {
+                @memcpy(out[0..abi.sizeOf(Event)], in[0..abi.sizeOf(Event)]);
+                return;
+            }
+            var data = abi.loadCase(Event, tag, in);
+            handler(srv, &data);
+            abi.storeCase(Event, tag, data, out);
         }
     };
     ctx.registerEvent(handlerId(&glue.dispatch), event_type, options.priority, options.blocking);
 }
 
-pub const EventHandler = fn (Server, *Event) void;
+const EventDispatch = fn (Server, in: [*]const u8, out: [*]u8) void;
+
 pub const CommandHandler = fn (CommandSender, Server, ConsumedArgs) CommandResult;
 pub const SuggestionHandler = fn (CommandSender, Server, command.SuggestionRequest) command.CommandSuggestions;
 pub const TaskHandler = fn (Server) void;
@@ -223,10 +233,23 @@ pub fn register(comptime Plugin: type) void {
             return .ok;
         }
 
-        fn handleEvent(id: u32, srv: Server, ev: Event) Event {
-            var out = ev;
-            handlerFromId(EventHandler, id)(srv, &out);
-            return out;
+        // Written by hand instead of going through `exports.handleEvent`, see `on`.
+        fn handleEvent(raw_args: i32) callconv(.c) i32 {
+            const Args = struct { u32, Server, Event };
+            comptime std.debug.assert(abi.passedInMemory(Args));
+
+            const args: [*]const u8 = @ptrFromInt(@as(u32, @bitCast(raw_args)));
+            const id = abi.load(u32, args + abi.offsetOf(Args, 0));
+            const srv = abi.load(Server, args + abi.offsetOf(Args, 1));
+            const out = abi.alloc(Event);
+
+            handlerFromId(EventDispatch, id)(srv, args + abi.offsetOf(Args, 2), out);
+            abi.releaseHandles();
+            return @bitCast(@as(u32, @intFromPtr(out)));
+        }
+
+        fn postHandleEvent(_: i32) callconv(.c) void {
+            abi.endCall();
         }
 
         fn handleCommand(id: u32, sender: CommandSender, srv: Server, args: ConsumedArgs) CommandResult {
@@ -281,7 +304,8 @@ pub fn register(comptime Plugin: type) void {
     exports.getMetadata(glue.getMetadata);
     exports.onLoad(glue.onLoad);
     exports.onUnload(glue.onUnload);
-    exports.handleEvent(glue.handleEvent);
+    @export(&glue.handleEvent, .{ .name = "handle-event" });
+    @export(&glue.postHandleEvent, .{ .name = "cabi_post_handle-event" });
     exports.handleCommand(glue.handleCommand);
     exports.handleCommandSuggestion(glue.handleCommandSuggestion);
     exports.handleTask(glue.handleTask);
